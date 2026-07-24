@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +6,7 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
+import '../utils/pdf_download.dart';
 import '../providers/lesson_plan_provider.dart';
 import '../models/lesson_plan.dart';
 import '../services/error_handler.dart';
@@ -208,20 +207,11 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
 
-      final dir = await getTemporaryDirectory();
       final fileName = '${_plan!.title.replaceAll(RegExp(r'[^a-zA-Z0-9 ]'), '')}.pdf';
-      final file = File('${dir.path}/$fileName');
-      await file.writeAsBytes(pdfBytes);
-      debugPrint('[PDF] Saved to temp file: ${file.path}');
-
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text: '${_plan!.title} - Lesson Plan',
-        ),
-      );
-      debugPrint('[PDF] Share completed successfully');
+      await saveAndSharePdf(pdfBytes, fileName);
+      debugPrint('[PDF] Export completed successfully');
     } catch (e) {
+      debugPrint('[PDF] Export failed: $e');
       if (mounted) {
         Navigator.of(context).pop();
         ErrorSnackbar.showError(context, AppErrorHandler.friendlyMessage('pdf_export'));
