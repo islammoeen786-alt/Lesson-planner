@@ -6,7 +6,7 @@ class ApiService {
   late final Dio _dio;
 
   static const String _devUrl = 'http://localhost:3000/api';
-  static const String _prodUrl = 'https://yourdomain.com/api'; // CHANGE THIS
+  static const String _prodUrl = 'https://2bb55ced11f1e0.lhr.life/api';
 
   static String get defaultBaseUrl => kReleaseMode ? _prodUrl : _devUrl;
 
