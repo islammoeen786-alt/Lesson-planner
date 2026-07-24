@@ -46,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
       body: RefreshIndicator(
         onRefresh: () => auth.refreshProfile(),
         child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: [
             const SizedBox(height: 8),
