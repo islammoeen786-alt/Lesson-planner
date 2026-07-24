@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/lesson_plan_provider.dart';
 import 'services/api_service.dart';
-import 'services/error_handler.dart';
 import 'services/local_storage_service.dart';
 import 'services/theme_service.dart';
 import 'screens/splash_screen.dart';
@@ -51,7 +50,7 @@ void main() async {
 
 class SmartLessonPlannerApp extends StatelessWidget {
   final ThemeService themeService;
-  const SmartLessonPlannerApp({super.key, required this.themeService});
+  SmartLessonPlannerApp({super.key, required this.themeService});
 
   final _navigatorKey = GlobalKey<NavigatorState>();
 

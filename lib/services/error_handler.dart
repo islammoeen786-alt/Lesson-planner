@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -81,8 +82,8 @@ class AppErrorHandler {
 
       switch (statusCode) {
         case 400:
-          return AppError(
-            message: serverMsg ?? 'Invalid request. Please check your input.',
+          return const AppError(
+            message: 'Invalid request. Please check your input.',
             statusCode: 400,
             severity: AppErrorSeverity.medium,
           );

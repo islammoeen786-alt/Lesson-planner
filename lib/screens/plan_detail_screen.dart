@@ -186,15 +186,6 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     );
   }
 
-  void _showSnackBar(String msg, {bool isError = false}) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: isError ? AppColors.error : AppColors.success,
-      behavior: SnackBarBehavior.floating,
-    ));
-  }
-
   Future<void> _printPlan() async {
     debugPrint('[PRINT] Starting print layout...');
     try {
