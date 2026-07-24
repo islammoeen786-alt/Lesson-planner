@@ -16,7 +16,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
+class _ProfileScreenState extends State<ProfileScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
@@ -58,7 +59,8 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     final user = auth.user;
     final version = auth.profileVersion;
 
-    debugPrint('[ProfileScreen] Build: version=$version email=${user?.email} isPro=${user?.isPro} plan=${user?.plan}');
+    debugPrint(
+        '[ProfileScreen] Build: version=$version email=${user?.email} isPro=${user?.isPro} plan=${user?.plan}');
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
@@ -74,23 +76,38 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
             _buildProCard(context, theme),
             const SizedBox(height: 16),
             _buildMenuSection(theme, 'Account', [
-              _menuItem(theme, Icons.person_outline, 'Edit Profile', () => _showEditProfile(context, auth)),
-              _menuItem(theme, Icons.school_outlined, 'School Info', user?.schoolName ?? 'Not set', () => _showSchoolInfo(context, auth)),
-              if (user?.subjectsTaught != null && user!.subjectsTaught!.isNotEmpty)
-                _menuItem(theme, Icons.book_outlined, 'Subjects', user.subjectsTaught!.join(', '), null),
-              _menuItem(theme, Icons.language_outlined, 'Language', 'English', null),
+              _menuItem(theme, Icons.person_outline, 'Edit Profile',
+                  () => _showEditProfile(context, auth)),
+              _menuItem(
+                  theme,
+                  Icons.school_outlined,
+                  'School Info',
+                  user?.schoolName ?? 'Not set',
+                  () => _showSchoolInfo(context, auth)),
+              if (user?.subjectsTaught != null &&
+                  user!.subjectsTaught!.isNotEmpty)
+                _menuItem(theme, Icons.book_outlined, 'Subjects',
+                    user.subjectsTaught!.join(', '), null),
+              _menuItem(
+                  theme, Icons.language_outlined, 'Language', 'English', null),
             ]),
             const SizedBox(height: 12),
             _buildMenuSection(theme, 'Preferences', [
-              _menuItemWithTrailing(theme, Icons.dark_mode_outlined, 'Theme', () => _showThemePicker(context), _ThemeBadge(theme: theme)),
-              _menuItem(theme, Icons.notifications_outlined, 'Notifications', () => Navigator.pushNamed(context, '/notifications')),
-              _menuItem(theme, Icons.auto_awesome_outlined, 'AI Preferences', () => Navigator.pushNamed(context, '/ai-preferences')),
+              _menuItemWithTrailing(theme, Icons.dark_mode_outlined, 'Theme',
+                  () => _showThemePicker(context), _ThemeBadge(theme: theme)),
+              _menuItem(theme, Icons.notifications_outlined, 'Notifications',
+                  () => Navigator.pushNamed(context, '/notifications')),
+              _menuItem(theme, Icons.auto_awesome_outlined, 'AI Preferences',
+                  () => Navigator.pushNamed(context, '/ai-preferences')),
             ]),
             const SizedBox(height: 12),
             _buildMenuSection(theme, 'Support', [
-              _menuItem(theme, Icons.help_outline, 'Help & FAQ', () => Navigator.pushNamed(context, '/help')),
-              _menuItem(theme, Icons.shield_outlined, 'Privacy Policy', () => Navigator.pushNamed(context, '/privacy')),
-              _menuItem(theme, Icons.info_outline, 'About', () => Navigator.pushNamed(context, '/about')),
+              _menuItem(theme, Icons.help_outline, 'Help & FAQ',
+                  () => Navigator.pushNamed(context, '/help')),
+              _menuItem(theme, Icons.shield_outlined, 'Privacy Policy',
+                  () => Navigator.pushNamed(context, '/privacy')),
+              _menuItem(theme, Icons.info_outline, 'About',
+                  () => Navigator.pushNamed(context, '/about')),
             ]),
             const SizedBox(height: 24),
             Padding(
@@ -98,9 +115,11 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
               child: OutlinedButton.icon(
                 onPressed: () => _signOut(context, auth),
                 icon: const Icon(Icons.logout, color: AppColors.error),
-                label: const Text('Sign Out', style: TextStyle(color: AppColors.error)),
+                label: const Text('Sign Out',
+                    style: TextStyle(color: AppColors.error)),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
+                  side:
+                      BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
@@ -113,8 +132,11 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
 
   Future<void> _signOut(BuildContext context, AuthProvider auth) async {
     final confirm = await AppDialog.confirm(
-      context, title: 'Sign Out', message: 'Are you sure you want to sign out?',
-      confirmLabel: 'Sign Out', confirmColor: AppColors.error,
+      context,
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out?',
+      confirmLabel: 'Sign Out',
+      confirmColor: AppColors.error,
     );
     if (confirm != true || !context.mounted) return;
     await LocalStorageService.clearAuthData();
@@ -128,8 +150,10 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     final user = auth.user;
     final nameCtl = TextEditingController(text: user?.name ?? '');
     final schoolCtl = TextEditingController(text: user?.schoolName ?? '');
-    final subjectsCtl = TextEditingController(text: user?.subjectsTaught?.join(', ') ?? '');
-    final gradesCtl = TextEditingController(text: user?.gradeLevelsTaught?.join(', ') ?? '');
+    final subjectsCtl =
+        TextEditingController(text: user?.subjectsTaught?.join(', ') ?? '');
+    final gradesCtl =
+        TextEditingController(text: user?.gradeLevelsTaught?.join(', ') ?? '');
     final formKey = GlobalKey<FormState>();
     var saving = false;
 
@@ -145,13 +169,32 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextFormField(controller: nameCtl, decoration: const InputDecoration(labelText: 'Full Name', prefixIcon: Icon(Icons.person_outline)), validator: (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null),
+                  TextFormField(
+                      controller: nameCtl,
+                      decoration: const InputDecoration(
+                          labelText: 'Full Name',
+                          prefixIcon: Icon(Icons.person_outline)),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Name is required'
+                          : null),
                   const SizedBox(height: 12),
-                  TextFormField(controller: schoolCtl, decoration: const InputDecoration(labelText: 'School Name', prefixIcon: Icon(Icons.school_outlined))),
+                  TextFormField(
+                      controller: schoolCtl,
+                      decoration: const InputDecoration(
+                          labelText: 'School Name',
+                          prefixIcon: Icon(Icons.school_outlined))),
                   const SizedBox(height: 12),
-                  TextFormField(controller: subjectsCtl, decoration: const InputDecoration(labelText: 'Subjects (comma separated)', prefixIcon: Icon(Icons.book_outlined))),
+                  TextFormField(
+                      controller: subjectsCtl,
+                      decoration: const InputDecoration(
+                          labelText: 'Subjects (comma separated)',
+                          prefixIcon: Icon(Icons.book_outlined))),
                   const SizedBox(height: 12),
-                  TextFormField(controller: gradesCtl, decoration: const InputDecoration(labelText: 'Grade Levels (comma separated)', prefixIcon: Icon(Icons.grade_outlined))),
+                  TextFormField(
+                      controller: gradesCtl,
+                      decoration: const InputDecoration(
+                          labelText: 'Grade Levels (comma separated)',
+                          prefixIcon: Icon(Icons.grade_outlined))),
                 ],
               ),
             ),
@@ -162,25 +205,44 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
               child: const Text('Cancel'),
             ),
             FilledButton(
-              onPressed: saving ? null : () async {
-                if (!formKey.currentState!.validate()) return;
-                setDialogState(() => saving = true);
-                try {
-                  await auth.updateProfile({
-                    'name': nameCtl.text.trim(),
-                    'schoolName': schoolCtl.text.trim(),
-                    'subjectsTaught': subjectsCtl.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-                    'gradeLevelsTaught': gradesCtl.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-                  });
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  if (context.mounted) ErrorSnackbar.showSuccess(context, 'Profile updated');
-                } catch (_) {
-                  setDialogState(() => saving = false);
-                  if (context.mounted) ErrorSnackbar.showError(context, auth.appError?.message ?? 'Unable to save changes.');
-                }
-              },
+              onPressed: saving
+                  ? null
+                  : () async {
+                      if (!formKey.currentState!.validate()) return;
+                      setDialogState(() => saving = true);
+                      try {
+                        await auth.updateProfile({
+                          'name': nameCtl.text.trim(),
+                          'schoolName': schoolCtl.text.trim(),
+                          'subjectsTaught': subjectsCtl.text
+                              .split(',')
+                              .map((e) => e.trim())
+                              .where((e) => e.isNotEmpty)
+                              .toList(),
+                          'gradeLevelsTaught': gradesCtl.text
+                              .split(',')
+                              .map((e) => e.trim())
+                              .where((e) => e.isNotEmpty)
+                              .toList(),
+                        });
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (context.mounted)
+                          ErrorSnackbar.showSuccess(context, 'Profile updated');
+                      } catch (_) {
+                        setDialogState(() => saving = false);
+                        if (context.mounted)
+                          ErrorSnackbar.showError(
+                              context,
+                              auth.appError?.message ??
+                                  'Unable to save changes.');
+                      }
+                    },
               child: saving
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
                   : const Text('Save'),
             ),
           ],
@@ -201,14 +263,19 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
           children: [
             _infoRow(ctx, 'School', user?.schoolName ?? 'Not set'),
             const Divider(),
-            _infoRow(ctx, 'Subjects', user?.subjectsTaught?.join(', ') ?? 'Not set'),
+            _infoRow(
+                ctx, 'Subjects', user?.subjectsTaught?.join(', ') ?? 'Not set'),
             const Divider(),
-            _infoRow(ctx, 'Grade Levels', user?.gradeLevelsTaught?.join(', ') ?? 'Not set'),
+            _infoRow(ctx, 'Grade Levels',
+                user?.gradeLevelsTaught?.join(', ') ?? 'Not set'),
             const Divider(),
             _infoRow(ctx, 'Language', 'English'),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Close'))
+        ],
       ),
     );
   }
@@ -224,21 +291,26 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _themeOption(ctx, themeService, Icons.light_mode, 'Light', ThemeMode.light, current),
-            _themeOption(ctx, themeService, Icons.dark_mode, 'Dark', ThemeMode.dark, current),
-            _themeOption(ctx, themeService, Icons.settings_brightness, 'System Default', ThemeMode.system, current),
+            _themeOption(ctx, themeService, Icons.light_mode, 'Light',
+                ThemeMode.light, current),
+            _themeOption(ctx, themeService, Icons.dark_mode, 'Dark',
+                ThemeMode.dark, current),
+            _themeOption(ctx, themeService, Icons.settings_brightness,
+                'System Default', ThemeMode.system, current),
           ],
         ),
       ),
     );
   }
 
-  Widget _themeOption(BuildContext context, ThemeService service, IconData icon, String label, ThemeMode mode, ThemeMode current) {
+  Widget _themeOption(BuildContext context, ThemeService service, IconData icon,
+      String label, ThemeMode mode, ThemeMode current) {
     final selected = mode == current;
     return ListTile(
       leading: Icon(icon, color: selected ? AppColors.primary : null),
       title: Text(label),
-      trailing: selected ? const Icon(Icons.check, color: AppColors.primary) : null,
+      trailing:
+          selected ? const Icon(Icons.check, color: AppColors.primary) : null,
       onTap: () {
         service.setThemeMode(mode);
         Navigator.pop(context);
@@ -252,7 +324,11 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textTertiaryLight)),
+          Text(label,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: AppColors.textTertiaryLight)),
           const SizedBox(height: 2),
           Text(value, style: Theme.of(context).textTheme.bodyLarge),
         ],
@@ -265,15 +341,20 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
       child: Row(
         children: [
           Container(
-            width: 64, height: 64,
+            width: 64,
+            height: 64,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
+              gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryLight]),
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 (user?.name ?? 'T')[0].toUpperCase(),
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white),
+                style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white),
               ),
             ),
           ),
@@ -282,15 +363,23 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user?.name ?? 'Teacher', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+                Text(user?.name ?? 'Teacher',
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
-                Text(user?.email ?? '', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondaryLight)),
-                if (user?.schoolName != null && user!.schoolName!.isNotEmpty) ...[
+                Text(user?.email ?? '',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: AppColors.textSecondaryLight)),
+                if (user?.schoolName != null &&
+                    user!.schoolName!.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Row(children: [
-                    const Icon(Icons.school, size: 14, color: AppColors.textTertiaryLight),
+                    const Icon(Icons.school,
+                        size: 14, color: AppColors.textTertiaryLight),
                     const SizedBox(width: 4),
-                    Text(user.schoolName!, style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textTertiaryLight)),
+                    Text(user.schoolName!,
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: AppColors.textTertiaryLight)),
                   ]),
                 ],
               ],
@@ -315,7 +404,8 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                 color: const Color(0xFF25D366).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.auto_awesome, color: Color(0xFF25D366), size: 24),
+              child: const Icon(Icons.auto_awesome,
+                  color: Color(0xFF25D366), size: 24),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -324,22 +414,29 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                 children: [
                   Row(
                     children: [
-                      Text('Plan Karo Pro', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                      Text('Smart Lesson Planner Pro',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700)),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEF3C7),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text('⭐ PRO',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF92400E))),
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF92400E))),
                       ),
                     ],
                   ),
                   const SizedBox(height: 2),
                   Text('Unlimited AI generations & all premium features',
-                      style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondaryLight)),
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: AppColors.textSecondaryLight)),
                 ],
               ),
             ),
@@ -358,16 +455,21 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
               color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
+            child: const Icon(Icons.auto_awesome,
+                color: AppColors.primary, size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Smart Lesson Planner Pro', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                Text('Smart Lesson Planner Pro',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
-                Text('Unlimited AI generations & more', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondaryLight)),
+                Text('Unlimited AI generations & more',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: AppColors.textSecondaryLight)),
               ],
             ),
           ),
@@ -378,8 +480,10 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
               backgroundColor: const Color(0xFF25D366),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              textStyle:
+                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
             child: const Text('Get Pro'),
           ),
@@ -394,14 +498,17 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(title, style: theme.textTheme.titleSmall?.copyWith(color: AppColors.textSecondaryLight)),
+          child: Text(title,
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(color: AppColors.textSecondaryLight)),
         ),
         ...items,
       ],
     );
   }
 
-  Widget _menuItem(ThemeData theme, IconData icon, String title, [dynamic subtitleOrOnTap, VoidCallback? onTap]) {
+  Widget _menuItem(ThemeData theme, IconData icon, String title,
+      [dynamic subtitleOrOnTap, VoidCallback? onTap]) {
     final subtitle = subtitleOrOnTap is String ? subtitleOrOnTap : null;
     final tap = subtitleOrOnTap is VoidCallback ? subtitleOrOnTap : onTap;
     return AppCard(
@@ -411,15 +518,23 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
       child: ListTile(
         leading: Icon(icon, color: AppColors.textSecondaryLight),
         title: Text(title, style: theme.textTheme.bodyLarge),
-        subtitle: subtitle != null ? Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textTertiaryLight)) : null,
-        trailing: tap != null ? const Icon(Icons.chevron_right, color: AppColors.textTertiaryLight, size: 20) : null,
+        subtitle: subtitle != null
+            ? Text(subtitle,
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: AppColors.textTertiaryLight))
+            : null,
+        trailing: tap != null
+            ? const Icon(Icons.chevron_right,
+                color: AppColors.textTertiaryLight, size: 20)
+            : null,
         contentPadding: EdgeInsets.zero,
         visualDensity: VisualDensity.compact,
       ),
     );
   }
 
-  Widget _menuItemWithTrailing(ThemeData theme, IconData icon, String title, VoidCallback? onTap, Widget trailing) {
+  Widget _menuItemWithTrailing(ThemeData theme, IconData icon, String title,
+      VoidCallback? onTap, Widget trailing) {
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       margin: const EdgeInsets.only(bottom: 4),
@@ -445,9 +560,15 @@ class _ThemeBadge extends StatelessWidget {
     final mode = themeService.themeMode;
     String label;
     switch (mode) {
-      case ThemeMode.light: label = 'Light'; break;
-      case ThemeMode.dark: label = 'Dark'; break;
-      case ThemeMode.system: label = 'Auto'; break;
+      case ThemeMode.light:
+        label = 'Light';
+        break;
+      case ThemeMode.dark:
+        label = 'Dark';
+        break;
+      case ThemeMode.system:
+        label = 'Auto';
+        break;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -455,7 +576,11 @@ class _ThemeBadge extends StatelessWidget {
         color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.primary)),
+      child: Text(label,
+          style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.primary)),
     );
   }
 }
