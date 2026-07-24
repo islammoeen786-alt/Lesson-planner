@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/pro_upgrade_dialog.dart';
+import '../widgets/error_ui.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -35,6 +36,17 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     }
   }
 
+  Future<void> _refreshProfile() async {
+    final auth = context.read<AuthProvider>();
+    try {
+      await auth.refreshProfile();
+    } catch (e) {
+      if (mounted && auth.appError != null) {
+        ErrorSnackbar.show(context, auth.appError!);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -44,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: RefreshIndicator(
-        onRefresh: () => auth.refreshProfile(),
+        onRefresh: _refreshProfile,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -154,10 +166,10 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                     'gradeLevelsTaught': gradesCtl.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
                   });
                   if (ctx.mounted) Navigator.pop(ctx);
-                  if (context.mounted) AppDialog.showSuccess(context, 'Profile updated');
+                  if (context.mounted) ErrorSnackbar.showSuccess(context, 'Profile updated');
                 } catch (_) {
                   setDialogState(() => saving = false);
-                  if (context.mounted) AppDialog.showError(context, 'Failed to update profile');
+                  if (context.mounted) ErrorSnackbar.showError(context, auth.appError?.message ?? 'Unable to save changes.');
                 }
               },
               child: saving

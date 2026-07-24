@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
+import '../widgets/error_ui.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final _passwordController = TextEditingController();
   bool _isRegistering = false;
   bool _obscurePassword = true;
+  bool _isSubmitting = false;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
 
@@ -38,7 +40,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
 
   Future<void> _submit() async {
+    if (_isSubmitting) return;
     if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSubmitting = true);
     final auth = context.read<AuthProvider>();
     final bool success;
     if (_isRegistering) {
@@ -46,12 +51,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     } else {
       success = await auth.login(_emailController.text, _passwordController.text);
     }
-    if (success && mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else if (!success && mounted && auth.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Row(children: [const Icon(Icons.error_outline, color: Colors.white, size: 20), const SizedBox(width: 12), Text(auth.error!)]), backgroundColor: AppColors.error),
-      );
+
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+      if (success) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else if (auth.appError != null) {
+        ErrorSnackbar.show(context, auth.appError!);
+      }
     }
   }
 
@@ -108,7 +115,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 controller: _emailController,
                                 decoration: const InputDecoration(labelText: 'Email Address', prefixIcon: Icon(Icons.email_outlined)),
                                 keyboardType: TextInputType.emailAddress,
-                                validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+                                validator: (v) {
+                                  if (v == null || v.trim().isEmpty) return 'Email is required';
+                                  if (!v.contains('@') || !v.contains('.')) return 'Please enter a valid email address.';
+                                  return null;
+                                },
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
@@ -122,19 +133,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   ),
                                 ),
                                 obscureText: _obscurePassword,
-                                validator: (v) => (v == null || v.length < 8) ? 'Min 8 characters' : null,
+                                validator: (v) => (v == null || v.length < 8) ? 'Password must be at least 8 characters.' : null,
                               ),
                               const SizedBox(height: 24),
                               Consumer<AuthProvider>(
-                                builder: (_, auth, __) => SizedBox(
-                                  width: double.infinity,
-                                  height: 50,
-                                  child: FilledButton(
-                                    onPressed: auth.status == AuthStatus.loading ? null : _submit,
-                                    child: auth.status == AuthStatus.loading
-                                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                        : Text(_isRegistering ? 'Create Account' : 'Sign In', style: const TextStyle(fontSize: 16)),
-                                  ),
+                                builder: (_, auth, __) => LoadingButton(
+                                  isLoading: auth.status == AuthStatus.loading || _isSubmitting,
+                                  onPressed: _submit,
+                                  label: _isRegistering ? 'Create Account' : 'Sign In',
+                                  loadingLabel: _isRegistering ? 'Creating account...' : 'Signing in...',
                                 ),
                               ),
                             ],

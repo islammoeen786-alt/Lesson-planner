@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../services/api_service.dart';
+import '../services/error_handler.dart';
 import '../models/lesson_plan.dart';
 
 class LessonPlanProvider extends ChangeNotifier {
@@ -11,7 +12,7 @@ class LessonPlanProvider extends ChangeNotifier {
   int _totalPages = 1;
   int _quotaUsed = 0;
   int _quotaLimit = 20;
-  String? _error;
+  AppError? _appError;
   String _searchQuery = '';
   String? _subjectFilter;
   String? _statusFilter;
@@ -25,12 +26,21 @@ class LessonPlanProvider extends ChangeNotifier {
   int get quotaRemaining => _quotaLimit - _quotaUsed;
   int get quotaUsed => _quotaUsed;
   int get quotaLimit => _quotaLimit;
-  String? get error => _error;
+  String? get error => _appError?.message;
+  AppError? get appError => _appError;
+
+  void clearError() {
+    _appError = null;
+    notifyListeners();
+  }
 
   Future<void> loadPlans({int page = 1, bool refresh = false}) async {
-    if (refresh) _currentPage = 1;
+    if (refresh) {
+      _currentPage = 1;
+      _plans = [];
+    }
     _isLoading = true;
-    _error = null;
+    _appError = null;
     notifyListeners();
 
     try {
@@ -48,7 +58,7 @@ class LessonPlanProvider extends ChangeNotifier {
       _currentPage = data['pagination']['page'];
       _totalPages = data['pagination']['totalPages'];
     } catch (e) {
-      _error = 'Failed to load lesson plans';
+      _appError = AppErrorHandler.fromException(e);
     }
 
     _isLoading = false;
@@ -60,7 +70,6 @@ class LessonPlanProvider extends ChangeNotifier {
       final response = await _api.get('/ai/quota');
       final data = response.data;
       final isPro = data['isPro'] == true;
-      // If pro, show unlimited
       if (isPro) {
         _quotaUsed = 0;
         _quotaLimit = 999999;
@@ -82,7 +91,7 @@ class LessonPlanProvider extends ChangeNotifier {
     String? extraInstructions,
   }) async {
     _isLoading = true;
-    _error = null;
+    _appError = null;
     notifyListeners();
 
     try {
@@ -104,19 +113,30 @@ class LessonPlanProvider extends ChangeNotifier {
     } catch (e) {
       if (e is DioException && e.response?.data != null) {
         final data = e.response!.data;
-        _error = data['error'] as String? ?? "Couldn't generate a plan right now. Try again.";
-        if (data['quota'] != null) {
-          final q = data['quota'];
-          if (q['isPro'] == true) {
-            _quotaUsed = 0;
-            _quotaLimit = 999999;
-          } else {
-            _quotaUsed = q['used'] ?? _quotaUsed;
-            _quotaLimit = q['limit'] ?? _quotaLimit;
+        if (data is Map) {
+          _appError = AppError(
+            message: data['error'] as String? ?? AppErrorHandler.friendlyMessage('generate'),
+            isRetryable: true,
+            severity: AppErrorSeverity.medium,
+          );
+          if (data['quota'] != null) {
+            final q = data['quota'];
+            if (q['isPro'] == true) {
+              _quotaUsed = 0;
+              _quotaLimit = 999999;
+            } else {
+              _quotaUsed = q['used'] ?? _quotaUsed;
+              _quotaLimit = q['limit'] ?? _quotaLimit;
+            }
           }
+        } else {
+          _appError = AppError(
+            message: AppErrorHandler.friendlyMessage('generate'),
+            isRetryable: true,
+          );
         }
       } else {
-        _error = "Couldn't generate a plan right now. Try again.";
+        _appError = AppErrorHandler.fromException(e);
       }
       _isLoading = false;
       notifyListeners();
@@ -133,6 +153,8 @@ class LessonPlanProvider extends ChangeNotifier {
       notifyListeners();
       return updated;
     } catch (e) {
+      _appError = AppErrorHandler.fromException(e);
+      notifyListeners();
       return null;
     }
   }
@@ -151,6 +173,11 @@ class LessonPlanProvider extends ChangeNotifier {
       notifyListeners();
       return updated;
     } catch (e) {
+      _appError = AppError(
+        message: AppErrorHandler.friendlyMessage('generate'),
+        isRetryable: true,
+      );
+      notifyListeners();
       return null;
     }
   }

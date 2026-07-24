@@ -10,8 +10,10 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import '../providers/lesson_plan_provider.dart';
 import '../models/lesson_plan.dart';
+import '../services/error_handler.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_card.dart';
+import '../widgets/error_ui.dart';
 
 String _sanitizePdfText(String text) {
   return text
@@ -165,9 +167,9 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     Navigator.of(context).pop();
     if (updated != null) {
       setState(() { _plan = updated; });
-      _showSnackBar('Section regenerated');
+      if (mounted) ErrorSnackbar.showSuccess(context, 'Section regenerated');
     } else {
-      _showSnackBar('Failed to regenerate section', isError: true);
+      if (mounted) ErrorSnackbar.showError(context, 'Unable to regenerate section.');
     }
   }
 
@@ -200,10 +202,8 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
         onLayout: (_) => _buildPdf(PdfPageFormat.a4),
       );
       debugPrint('[PRINT] Print completed');
-    } catch (e, stack) {
-      debugPrint('[PRINT] ERROR: $e');
-      debugPrint('[PRINT] STACK: $stack');
-      _showSnackBar('Print failed: $e', isError: true);
+    } catch (e) {
+      if (mounted) ErrorSnackbar.showError(context, 'Unable to print the lesson plan.');
     }
   }
 
@@ -230,13 +230,10 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
         ),
       );
       debugPrint('[PDF] Share completed successfully');
-    } catch (e, stack) {
-      debugPrint('[PDF] ERROR: $e');
-      debugPrint('[PDF] STACK TRACE:');
-      debugPrint(stack.toString());
+    } catch (e) {
       if (mounted) {
         Navigator.of(context).pop();
-        _showSnackBar('Failed to generate PDF: $e', isError: true);
+        ErrorSnackbar.showError(context, AppErrorHandler.friendlyMessage('pdf_export'));
       }
     }
   }
@@ -406,7 +403,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: buf.toString()));
                     Navigator.pop(ctx);
-                    _showSnackBar('Copied to clipboard');
+                    if (mounted) ErrorSnackbar.showSuccess(context, 'Copied to clipboard');
                   },
                   icon: const Icon(Icons.copy),
                   label: const Text('Copy to Clipboard'),

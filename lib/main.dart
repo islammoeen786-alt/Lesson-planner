@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,8 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/lesson_plan_provider.dart';
 import 'services/api_service.dart';
+import 'services/error_handler.dart';
+import 'services/local_storage_service.dart';
 import 'services/theme_service.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
@@ -50,9 +53,37 @@ class SmartLessonPlannerApp extends StatelessWidget {
   final ThemeService themeService;
   const SmartLessonPlannerApp({super.key, required this.themeService});
 
+  final _navigatorKey = GlobalKey<NavigatorState>();
+
+  void _onSessionExpired() {
+    LocalStorageService.clearAuthData();
+    FirebaseAuth.instance.signOut();
+    _navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (_) => false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _navigatorKey.currentContext;
+      if (ctx != null) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.white, size: 20),
+                SizedBox(width: 12),
+                Expanded(child: Text('Your session has expired. Please sign in again.')),
+              ],
+            ),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final apiService = ApiService();
+    final apiService = ApiService(onSessionExpired: _onSessionExpired);
 
     return MultiProvider(
       providers: [
@@ -62,6 +93,7 @@ class SmartLessonPlannerApp extends StatelessWidget {
       ],
       child: Consumer<ThemeService>(
         builder: (_, ts, __) => MaterialApp(
+          navigatorKey: _navigatorKey,
           title: 'Smart Lesson Planner',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,

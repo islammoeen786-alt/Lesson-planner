@@ -7,6 +7,7 @@ import '../widgets/app_card.dart';
 import '../widgets/pro_upgrade_dialog.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/loading_shimmer.dart';
+import '../widgets/error_ui.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,6 +27,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final lp = context.read<LessonPlanProvider>();
     await lp.loadPlans(refresh: true);
     await lp.loadQuota();
+    if (mounted && lp.appError != null && lp.appError!.isRetryable) {
+      ErrorSnackbar.show(context, lp.appError!);
+    }
   }
 
   @override
@@ -260,7 +264,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 4),
-        if (lp.isLoading && lp.plans.isEmpty)
+        if (lp.appError != null && lp.plans.isEmpty)
+          InlineError(
+            message: lp.appError!.message,
+            isRetryable: lp.appError!.isRetryable,
+            onRetry: () => context.read<LessonPlanProvider>().loadPlans(refresh: true),
+          )
+        else if (lp.isLoading && lp.plans.isEmpty)
           ...List.generate(3, (_) => const ShimmerCard())
         else if (lp.plans.isEmpty)
           EmptyState(

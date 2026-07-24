@@ -4,6 +4,7 @@ import '../providers/lesson_plan_provider.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_card.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/error_ui.dart';
 import '../widgets/loading_shimmer.dart';
 
 class LibraryScreen extends StatefulWidget {
@@ -62,6 +63,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ),
       body: Consumer<LessonPlanProvider>(
         builder: (_, lp, __) {
+          if (lp.appError != null && lp.plans.isEmpty) {
+            return RetryWidget(
+              message: lp.appError!.message,
+              onRetry: () => lp.loadPlans(refresh: true),
+            );
+          }
+
           if (lp.isLoading && lp.plans.isEmpty) {
             return ListView(padding: const EdgeInsets.all(16), children: List.generate(6, (_) => const ShimmerCard()));
           }

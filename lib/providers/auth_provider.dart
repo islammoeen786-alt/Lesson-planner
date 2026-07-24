@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/error_handler.dart';
 
 enum AuthStatus { uninitialized, authenticated, unauthenticated, loading }
 
@@ -11,7 +12,7 @@ class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth;
   AuthStatus _status = AuthStatus.uninitialized;
   UserProfile? _user;
-  String? _error;
+  AppError? _appError;
 
   AuthProvider(this._api, {FirebaseAuth? firebaseAuth})
       : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
@@ -20,8 +21,14 @@ class AuthProvider extends ChangeNotifier {
 
   AuthStatus get status => _status;
   UserProfile? get user => _user;
-  String? get error => _error;
+  String? get error => _appError?.message;
+  AppError? get appError => _appError;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
+
+  void clearError() {
+    _appError = null;
+    notifyListeners();
+  }
 
   Future<void> _syncWithBackend() async {
     final response = await _api.get('/auth/me');
@@ -48,7 +55,8 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       await _syncWithBackend();
-    } catch (_) {
+    } catch (e) {
+      _appError = AppErrorHandler.fromException(e);
       _user = null;
       _status = AuthStatus.unauthenticated;
       notifyListeners();
@@ -57,7 +65,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> login(String email, String password) async {
     _status = AuthStatus.loading;
-    _error = null;
+    _appError = null;
     notifyListeners();
 
     try {
@@ -66,36 +74,18 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
 
-      // Get fresh token and sync with backend
       final user = _firebaseAuth.currentUser;
       await user?.getIdToken(true);
 
       await _syncWithBackend();
       return true;
     } on FirebaseAuthException catch (e) {
-      debugPrint('Login error: $e');
-      switch (e.code) {
-        case 'user-not-found':
-          _error = 'No account found with this email';
-          break;
-        case 'wrong-password':
-          _error = 'Invalid email or password';
-          break;
-        case 'invalid-credential':
-          _error = 'Invalid email or password';
-          break;
-        case 'too-many-requests':
-          _error = 'Too many attempts. Try again later.';
-          break;
-        default:
-          _error = 'Login failed';
-      }
+      _appError = AppErrorHandler.fromFirebaseException(e);
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
     } catch (e) {
-      debugPrint('Login backend sync error: $e');
-      _error = 'Login failed: unable to sync with server';
+      _appError = AppErrorHandler.fromException(e);
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
@@ -104,7 +94,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> register(String name, String email, String password) async {
     _status = AuthStatus.loading;
-    _error = null;
+    _appError = null;
     notifyListeners();
 
     try {
@@ -113,34 +103,16 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
       await cred.user?.updateDisplayName(name);
-
-      // Force refresh the ID token so it includes the latest profile
       await cred.user?.getIdToken(true);
-
-      // Sync with backend now (provisions SQLite user) before navigation
       await _syncWithBackend();
       return true;
     } on FirebaseAuthException catch (e) {
-      debugPrint('Register error: $e');
-      switch (e.code) {
-        case 'email-already-in-use':
-          _error = 'Email already registered';
-          break;
-        case 'weak-password':
-          _error = 'Password is too weak';
-          break;
-        case 'invalid-email':
-          _error = 'Invalid email';
-          break;
-        default:
-          _error = 'Registration failed';
-      }
+      _appError = AppErrorHandler.fromFirebaseException(e);
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
     } catch (e) {
-      debugPrint('Register backend sync error: $e');
-      _error = 'Registration failed: unable to sync with server';
+      _appError = AppErrorHandler.fromException(e);
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
@@ -151,6 +123,7 @@ class AuthProvider extends ChangeNotifier {
     await _firebaseAuth.signOut();
     _user = null;
     _status = AuthStatus.unauthenticated;
+    _appError = null;
     notifyListeners();
   }
 
@@ -162,7 +135,8 @@ class AuthProvider extends ChangeNotifier {
           : Map<String, dynamic>.from(response.data);
       _user = UserProfile.fromJson(data);
       notifyListeners();
-    } catch (_) {
+    } catch (e) {
+      _appError = AppErrorHandler.fromException(e);
       rethrow;
     }
   }
@@ -171,8 +145,10 @@ class AuthProvider extends ChangeNotifier {
     try {
       final response = await _api.put('/users/profile', data: data);
       _user = UserProfile.fromJson(response.data);
+      _appError = null;
       notifyListeners();
-    } catch (_) {
+    } catch (e) {
+      _appError = AppErrorHandler.fromException(e);
       rethrow;
     }
   }

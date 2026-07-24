@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'error_handler.dart';
 
 class ApiService {
   late final Dio _dio;
@@ -10,7 +11,9 @@ class ApiService {
 
   static String get defaultBaseUrl => kReleaseMode ? _prodUrl : _devUrl;
 
-  ApiService({String? baseUrl}) {
+  VoidCallback? onSessionExpired;
+
+  ApiService({String? baseUrl, this.onSessionExpired}) {
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl ?? ApiService.defaultBaseUrl,
       connectTimeout: const Duration(seconds: 15),
@@ -22,23 +25,18 @@ class ApiService {
       onRequest: (options, handler) async {
         try {
           final user = FirebaseAuth.instance.currentUser;
-          debugPrint('[API] currentUser: ${user != null ? user.email : 'NULL'}');
           if (user != null) {
             final token = await user.getIdToken();
-            debugPrint('[API] Token obtained: ${token!.substring(0, 40)}...');
             options.headers['Authorization'] = 'Bearer $token';
-          } else {
-            debugPrint('[API] WARNING: No currentUser - no token attached!');
           }
         } catch (e) {
-          debugPrint('[API] ERROR getting token: $e');
+          debugPrint('[API] Token error: $e');
         }
         handler.next(options);
       },
       onError: (error, handler) {
-        debugPrint('[API] Response error: ${error.response?.statusCode} ${error.message}');
-        if (error.response?.data != null) {
-          debugPrint('[API] Error body: ${error.response?.data}');
+        if (error.response?.statusCode == 401) {
+          onSessionExpired?.call();
         }
         handler.next(error);
       },
