@@ -24,9 +24,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refresh() async {
+    debugPrint('[HomeScreen] Refreshing data');
+    final auth = context.read<AuthProvider>();
     final lp = context.read<LessonPlanProvider>();
-    await lp.loadPlans(refresh: true);
-    await lp.loadQuota();
+    await Future.wait([
+      auth.refreshProfile().catchError((_) {}),
+      lp.loadPlans(refresh: true),
+      lp.loadQuota(),
+    ]);
+    debugPrint('[HomeScreen] Refresh complete');
     if (mounted && lp.appError != null && lp.appError!.isRetryable) {
       ErrorSnackbar.show(context, lp.appError!);
     }

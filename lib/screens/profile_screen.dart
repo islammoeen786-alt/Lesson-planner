@@ -21,6 +21,10 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint('[ProfileScreen] Initial profile refresh');
+      _refreshProfile();
+    });
   }
 
   @override

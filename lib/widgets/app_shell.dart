@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class AppShell extends StatefulWidget {
   final int currentIndex;
@@ -10,18 +12,46 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   late int _selectedIndex;
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.currentIndex;
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onTabSelected(_selectedIndex));
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshProfile();
+    }
+  }
+
+  void _onTabSelected(int index) {
+    if (index == 0 || index == 3) {
+      _refreshProfile();
+    }
+  }
+
+  void _refreshProfile() {
+    try {
+      context.read<AuthProvider>().refreshProfile().catchError((_) {});
+    } catch (_) {}
   }
 
   void switchToTab(int index) {
     if (index >= 0 && index < widget.pages.length) {
       setState(() => _selectedIndex = index);
+      _onTabSelected(index);
     }
   }
 
@@ -42,7 +72,10 @@ class _AppShellState extends State<AppShell> {
             padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
             child: NavigationBar(
               selectedIndex: _selectedIndex,
-              onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+              onDestinationSelected: (i) {
+                setState(() => _selectedIndex = i);
+                _onTabSelected(i);
+              },
               height: 64,
               destinations: const [
                 NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),

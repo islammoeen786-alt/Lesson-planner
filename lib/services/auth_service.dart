@@ -54,4 +54,22 @@ class UserProfile {
     subscriptionEnd: json['subscriptionEnd'],
     createdAt: json['createdAt'],
   );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'uid': uid,
+    'name': name,
+    'email': email,
+    'role': role,
+    'schoolName': schoolName,
+    'subjectsTaught': subjectsTaught,
+    'gradeLevelsTaught': gradeLevelsTaught,
+    'languagePreference': languagePreference,
+    'plan': plan,
+    'isPro': isPro,
+    'subscriptionStatus': subscriptionStatus,
+    'subscriptionStart': subscriptionStart,
+    'subscriptionEnd': subscriptionEnd,
+    'createdAt': createdAt,
+  };
 }
