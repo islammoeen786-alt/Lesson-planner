@@ -111,6 +111,12 @@ class _GenerateScreenState extends State<GenerateScreen> {
     final auth = context.read<AuthProvider>();
     final provider = context.read<LessonPlanProvider>();
 
+    // Refresh profile and quota before checking Pro status
+    try {
+      await auth.refreshProfile();
+      await provider.loadQuota();
+    } catch (_) {}
+
     if (!(auth.user?.isPro ?? false) && provider.quotaRemaining <= 0) {
       if (mounted) await ProUpgradeDialog.show(context);
       return;

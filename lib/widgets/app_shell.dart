@@ -20,23 +20,35 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
     super.initState();
     _selectedIndex = widget.currentIndex;
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onTabSelected(_selectedIndex));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint('[AppShell] Post-frame init, starting periodic refresh');
+      context.read<AuthProvider>().startPeriodicRefresh();
+      _onTabSelected(_selectedIndex);
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    context.read<AuthProvider>().stopPeriodicRefresh();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    debugPrint('[AppShell] Lifecycle state: $state');
     if (state == AppLifecycleState.resumed) {
+      debugPrint('[AppShell] App resumed - starting periodic refresh and refreshing profile');
+      context.read<AuthProvider>().startPeriodicRefresh();
       _refreshProfile();
+    } else if (state == AppLifecycleState.paused) {
+      debugPrint('[AppShell] App paused - stopping periodic refresh');
+      context.read<AuthProvider>().stopPeriodicRefresh();
     }
   }
 
   void _onTabSelected(int index) {
+    debugPrint('[AppShell] Tab selected: $index');
     if (index == 0 || index == 3) {
       _refreshProfile();
     }
@@ -44,8 +56,12 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
   void _refreshProfile() {
     try {
-      context.read<AuthProvider>().refreshProfile().catchError((_) {});
-    } catch (_) {}
+      context.read<AuthProvider>().refreshProfile().catchError((err) {
+        debugPrint('[AppShell] Profile refresh error (caught): $err');
+      });
+    } catch (_) {
+      debugPrint('[AppShell] Profile refresh sync error');
+    }
   }
 
   void switchToTab(int index) {

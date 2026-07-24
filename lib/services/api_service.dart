@@ -25,7 +25,8 @@ class ApiService {
         try {
           final user = FirebaseAuth.instance.currentUser;
           if (user != null) {
-            final token = await user.getIdToken();
+            final token = await user.getIdToken(true);
+            debugPrint('[API] Added auth header (force-refreshed token)');
             options.headers['Authorization'] = 'Bearer $token';
           }
         } catch (e) {
@@ -34,7 +35,9 @@ class ApiService {
         handler.next(options);
       },
       onError: (error, handler) {
+        debugPrint('[API] Error: ${error.response?.statusCode} ${error.response?.data}');
         if (error.response?.statusCode == 401) {
+          debugPrint('[API] Session expired - calling onSessionExpired');
           onSessionExpired?.call();
         }
         handler.next(error);

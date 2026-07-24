@@ -44,6 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final auth = context.watch<AuthProvider>();
     final lp = context.watch<LessonPlanProvider>();
     final user = auth.user;
+    final version = auth.profileVersion;
+
+    debugPrint('[HomeScreen] Build: version=$version email=${user?.email} isPro=${user?.isPro} plan=${user?.plan}');
 
     return Scaffold(
       appBar: AppBar(

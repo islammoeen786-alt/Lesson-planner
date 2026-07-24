@@ -56,6 +56,9 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     final theme = Theme.of(context);
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
+    final version = auth.profileVersion;
+
+    debugPrint('[ProfileScreen] Build: version=$version email=${user?.email} isPro=${user?.isPro} plan=${user?.plan}');
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
