@@ -8,8 +8,32 @@ import '../widgets/app_card.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/pro_upgrade_dialog.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<AuthProvider>().refreshProfile().catchError((_) {});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,47 +43,50 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        children: [
-          const SizedBox(height: 8),
-          _buildProfileHeader(theme, user),
-          const SizedBox(height: 16),
-          _buildProCard(context, theme),
-          const SizedBox(height: 16),
-          _buildMenuSection(theme, 'Account', [
-            _menuItem(theme, Icons.person_outline, 'Edit Profile', () => _showEditProfile(context, auth)),
-            _menuItem(theme, Icons.school_outlined, 'School Info', user?.schoolName ?? 'Not set', () => _showSchoolInfo(context, auth)),
-            if (user?.subjectsTaught != null && user!.subjectsTaught!.isNotEmpty)
-              _menuItem(theme, Icons.book_outlined, 'Subjects', user.subjectsTaught!.join(', '), null),
-            _menuItem(theme, Icons.language_outlined, 'Language', 'English', null),
-          ]),
-          const SizedBox(height: 12),
-          _buildMenuSection(theme, 'Preferences', [
-            _menuItemWithTrailing(theme, Icons.dark_mode_outlined, 'Theme', () => _showThemePicker(context), _ThemeBadge(theme: theme)),
-            _menuItem(theme, Icons.notifications_outlined, 'Notifications', () => Navigator.pushNamed(context, '/notifications')),
-            _menuItem(theme, Icons.auto_awesome_outlined, 'AI Preferences', () => Navigator.pushNamed(context, '/ai-preferences')),
-          ]),
-          const SizedBox(height: 12),
-          _buildMenuSection(theme, 'Support', [
-            _menuItem(theme, Icons.help_outline, 'Help & FAQ', () => Navigator.pushNamed(context, '/help')),
-            _menuItem(theme, Icons.shield_outlined, 'Privacy Policy', () => Navigator.pushNamed(context, '/privacy')),
-            _menuItem(theme, Icons.info_outline, 'About', () => Navigator.pushNamed(context, '/about')),
-          ]),
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: OutlinedButton.icon(
-              onPressed: () => _signOut(context, auth),
-              icon: const Icon(Icons.logout, color: AppColors.error),
-              label: const Text('Sign Out', style: TextStyle(color: AppColors.error)),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
-                padding: const EdgeInsets.symmetric(vertical: 14),
+      body: RefreshIndicator(
+        onRefresh: () => auth.refreshProfile(),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          children: [
+            const SizedBox(height: 8),
+            _buildProfileHeader(theme, user),
+            const SizedBox(height: 16),
+            _buildProCard(context, theme),
+            const SizedBox(height: 16),
+            _buildMenuSection(theme, 'Account', [
+              _menuItem(theme, Icons.person_outline, 'Edit Profile', () => _showEditProfile(context, auth)),
+              _menuItem(theme, Icons.school_outlined, 'School Info', user?.schoolName ?? 'Not set', () => _showSchoolInfo(context, auth)),
+              if (user?.subjectsTaught != null && user!.subjectsTaught!.isNotEmpty)
+                _menuItem(theme, Icons.book_outlined, 'Subjects', user.subjectsTaught!.join(', '), null),
+              _menuItem(theme, Icons.language_outlined, 'Language', 'English', null),
+            ]),
+            const SizedBox(height: 12),
+            _buildMenuSection(theme, 'Preferences', [
+              _menuItemWithTrailing(theme, Icons.dark_mode_outlined, 'Theme', () => _showThemePicker(context), _ThemeBadge(theme: theme)),
+              _menuItem(theme, Icons.notifications_outlined, 'Notifications', () => Navigator.pushNamed(context, '/notifications')),
+              _menuItem(theme, Icons.auto_awesome_outlined, 'AI Preferences', () => Navigator.pushNamed(context, '/ai-preferences')),
+            ]),
+            const SizedBox(height: 12),
+            _buildMenuSection(theme, 'Support', [
+              _menuItem(theme, Icons.help_outline, 'Help & FAQ', () => Navigator.pushNamed(context, '/help')),
+              _menuItem(theme, Icons.shield_outlined, 'Privacy Policy', () => Navigator.pushNamed(context, '/privacy')),
+              _menuItem(theme, Icons.info_outline, 'About', () => Navigator.pushNamed(context, '/about')),
+            ]),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: OutlinedButton.icon(
+                onPressed: () => _signOut(context, auth),
+                icon: const Icon(Icons.logout, color: AppColors.error),
+                label: const Text('Sign Out', style: TextStyle(color: AppColors.error)),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

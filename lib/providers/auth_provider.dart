@@ -154,6 +154,19 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> refreshProfile() async {
+    try {
+      final response = await _api.get('/auth/me');
+      final data = response.data is String
+          ? Map<String, dynamic>.from(jsonDecode(response.data))
+          : Map<String, dynamic>.from(response.data);
+      _user = UserProfile.fromJson(data);
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
   Future<void> updateProfile(Map<String, dynamic> data) async {
     try {
       final response = await _api.put('/users/profile', data: data);
