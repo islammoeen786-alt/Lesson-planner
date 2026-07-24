@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import '../providers/lesson_plan_provider.dart';
 import '../models/lesson_plan.dart';
 import '../theme/app_colors.dart';
@@ -214,10 +216,16 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
 
       if (!mounted) return;
       Navigator.of(context).pop();
-      debugPrint('[PDF] Sharing PDF via XFile.fromData...');
+
+      final dir = await getTemporaryDirectory();
+      final fileName = '${_plan!.title.replaceAll(RegExp(r'[^a-zA-Z0-9 ]'), '')}.pdf';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(pdfBytes);
+      debugPrint('[PDF] Saved to temp file: ${file.path}');
+
       await SharePlus.instance.share(
         ShareParams(
-          files: [XFile.fromData(pdfBytes, name: '${_plan!.title.replaceAll(RegExp(r'[^a-zA-Z0-9 ]'), '')}.pdf')],
+          files: [XFile(file.path)],
           text: '${_plan!.title} - Lesson Plan',
         ),
       );
