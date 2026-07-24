@@ -7,7 +7,7 @@ Future<void> saveAndSharePdf(Uint8List bytes, String fileName) async {
   final anchor = html.AnchorElement(href: url)
     ..setAttribute('download', fileName)
     ..style.display = 'none';
-  document.body?.append(anchor);
+  html.document.body?.append(anchor);
   anchor.click();
   html.Url.revokeObjectUrl(url);
   anchor.remove();
