@@ -1,4 +1,4 @@
-package com.example.smart_lesson_planner
+package com.smartlessonplanner
 
 import io.flutter.embedding.android.FlutterActivity
 
