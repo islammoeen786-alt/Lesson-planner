@@ -44,9 +44,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Keystore and signing (DO NOT COMMIT)
+# Signing config with plaintext passwords (DO NOT COMMIT)
 android/key.properties
-android/app/upload-keystore.pfx
-android/app/upload-keystore.jks
-*.jks
-*.pfx

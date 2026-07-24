@@ -22,10 +22,9 @@ jobs:
           channel: stable
           flutter-version: 3.x
 
-      - name: Decode keystore
+      - name: Create signing config from secret
         run: |
-          echo "${{ secrets.KEYSTORE_B64 }}" | base64 -d > android/app/upload-keystore.pfx
-          echo "storeFile=$(realpath android/app/upload-keystore.pfx)" > android/key.properties
+          echo "storeFile=upload-keystore.pfx" > android/key.properties
           echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
           echo "keyPassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
           echo "keyAlias=upload" >> android/key.properties
