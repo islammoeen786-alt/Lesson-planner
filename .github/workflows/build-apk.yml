@@ -31,6 +31,30 @@ jobs:
           echo "keyAlias=upload" >> android/key.properties
           echo "storeType=PKCS12" >> android/key.properties
 
+      - name: Decode google-services.json from secret (if provided)
+        if: ${{ secrets.GOOGLE_SERVICES_JSON_B64 != '' }}
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 -d > android/app/google-services.json
+          echo "[CI] Overwrote google-services.json from GOOGLE_SERVICES_JSON_B64 secret"
+
+      - name: Verify google-services.json
+        run: |
+          # Validate JSON
+          if python3 -c "import json; json.load(open('android/app/google-services.json'))" 2>/dev/null; then
+            echo "[CI] google-services.json: VALID JSON"
+          else
+            echo "[CI] google-services.json: INVALID JSON — aborting"
+            python3 -c "import json; json.load(open('android/app/google-services.json'))" 2>&1 || true
+            exit 1
+          fi
+
+          # Debug: show size + first/last lines (safe — no secrets)
+          echo "[CI] Bytes: $(wc -c < android/app/google-services.json) | Lines: $(wc -l < android/app/google-services.json)"
+          echo "[CI] First 3 lines:"
+          head -n 3 android/app/google-services.json
+          echo "[CI] Last 2 lines:"
+          tail -n 2 android/app/google-services.json
+
       - name: Install dependencies
         run: flutter pub get
 
