@@ -30,11 +30,14 @@ jobs:
           echo "keyAlias=upload" >> android/key.properties
           echo "storeType=PKCS12" >> android/key.properties
 
-      - name: Decode google-services.json from secret (if provided)
-        if: ${{ secrets.GOOGLE_SERVICES_JSON_B64 != '' }}
+      - name: Optionally override google-services.json from secret
         run: |
-          echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 -d > android/app/google-services.json
-          echo "[CI] Overwrote google-services.json from GOOGLE_SERVICES_JSON_B64 secret"
+          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" ]; then
+            echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 -d > android/app/google-services.json
+            echo "[CI] Overwrote google-services.json from GOOGLE_SERVICES_JSON_B64 secret"
+          else
+            echo "[CI] Using committed google-services.json"
+          fi
 
       - name: Verify google-services.json
         run: |
